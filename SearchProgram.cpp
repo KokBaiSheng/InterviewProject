@@ -3,6 +3,8 @@
 #include<vector>
 #include<map>
 #include<cstring>
+#include<ctime>
+#include<iomanip>
 
 std::vector<std::vector<int>> read(std::ifstream& fs)
 {
@@ -214,6 +216,7 @@ int main(int argc, char ** argv)
 	{
 			printIntVec(row);
 	}
+	
 	readVec = XORCipherTwoDimension(readVec,12345);
 	for (std::vector<int> row : readVec)
 	{
@@ -226,6 +229,8 @@ int main(int argc, char ** argv)
 		vecSequence.push_back(atoi(argv[i]));
 	}
 	printIntVec(vecSequence);
+	std::cout <<"beginning Time" <<std::endl;
+	const clock_t begin_time = std::clock();
 	if(std::strcmp(argv[2],"searchsequence") == 0)
 	{
 		std::vector<std::vector<int>>answerMatrix  = searchSequence(readVec,vecSequence);
@@ -250,6 +255,8 @@ int main(int argc, char ** argv)
 	else{
 		std::cout<<"search function named wrongly"<<std::endl;
 	}
-	
+	std::cout << std::fixed << std::showpoint;
+	std::cout << std::setprecision(10);
+	std::cout <<"time : " << float(std::clock() - begin_time ) / CLOCKS_PER_SEC <<std::endl;
 	return 0;
 }
