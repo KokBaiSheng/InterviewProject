@@ -5,7 +5,10 @@
 #include<cstring>
 #include<ctime>
 #include<iomanip>
+#include<algorithm>
+#include<cctype>
 
+typedef std::vector<int> (*searchFunction)(std::vector<std::vector<int>> const &, std::vector<int> const &);
 class Node
 {
 	public:
@@ -120,10 +123,10 @@ std::vector<int>  getRowIndex (Node* baseNode, std::vector<int> const & sequence
 }
 
 
-std::vector<std::vector<int>> searchSequence(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
+std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
 {
 	// Setting up nodes
-	std::vector<std::vector<int>> ret = std::vector<std::vector<int>>();
+	std::vector<int> ret = std::vector<int>();
 	Node* baseNode =  new Node();
 	for (int y = 0; y< inMatrix.size(); ++y)
 	{
@@ -144,15 +147,15 @@ std::vector<std::vector<int>> searchSequence(std::vector<std::vector<int>> const
 	// return rows that are correct
 	for(int index : rows)
 	{
-			ret.push_back(inMatrix[index]);
+			ret.push_back(index);
 	}
 	std::cout <<"time : " << float(std::clock() - begin_time ) / CLOCKS_PER_SEC <<std::endl;
 	return ret;
 }
 
-std::vector<std::vector<int>> searchUnordered(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
+std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
 {
-	std::vector<std::vector<int>> ret = std::vector<std::vector<int>>();
+	std::vector<int> ret = std::vector<int>();
 	// Handle information processing
 	std::map<int,std::map<size_t, int >> processedMap = std::map<int,std::map<size_t, int >> ();
 	for (int y = 0; y < inMatrix.size();++y)
@@ -209,25 +212,21 @@ std::vector<std::vector<int>> searchUnordered(std::vector<std::vector<int>> cons
 			return ret;
 	}
 	//prepare to return
-	std::vector<int> rowIndexes = std::vector<int> ();
 	for(auto it : rowScore)
 	{
 		if(it.second == sequence.size())
 		{
-			rowIndexes.push_back(it.first);	
+			ret.push_back(it.first);	
 		}
 	}
-	for(int i : rowIndexes)
-	{
-		ret.push_back(inMatrix[i]);
-	}
+
 	std::cout <<"time : " << float(std::clock() - begin_time ) / CLOCKS_PER_SEC <<std::endl;
 	return ret;
 }
 
 std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
 {
-	std::vector<std::vector<int>> ret = std::vector<std::vector<int>>();
+	std::vector<int> ret = std::vector<int>();
 	// Handle information processing
 	std::map<int,std::map<size_t, int >> processedMap = std::map<int,std::map<size_t, int >> ();
 	for (int y = 0; y < inMatrix.size();++y)
@@ -292,7 +291,8 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 		}
 	}
 		std::cout <<"time : " << float(std::clock() - begin_time ) / CLOCKS_PER_SEC <<std::endl;
-	return inMatrix[retIndex];
+	ret.push_back(retIndex);
+	return ret;
 }
 
 int main(int argc, char ** argv)
@@ -318,6 +318,20 @@ int main(int argc, char ** argv)
 		std::cout <<"Please specify valid .dat file" << std::endl;
 		return -1;	
 	}
+	//Initialize search function map
+	std::map<std::string,searchFunction> funcMap = std::map<std::string,searchFunction>();
+	funcMap["searchsequence"] = searchSequence;
+	funcMap["searchunordered"] = searchUnordered;
+	funcMap["searchbestmatch"] = searchBestMatch;
+	//get searchfunction
+	std::string searchString = std::string(argv[2]);
+	std::transform(searchString.begin(),searchString.end(),searchString.begin(),
+				  [](unsigned char c) -> unsigned char { return std::tolower(c); });
+	if(funcMap.find(searchString) == funcMap.end())
+	{
+		std::cout<<"search function named wrongly"<<std::endl;
+		return -1;
+	}
 	
 	std::vector<std::vector<int>>readVec  = read(fs);
 	readVec = XORCipherTwoDimension(readVec,12345);
@@ -340,32 +354,8 @@ int main(int argc, char ** argv)
 	{
 		vecSequence.push_back(atoi(argv[i]));
 	}
-	
-	if(std::strcmp(argv[2],"searchsequence") == 0)
-	{
-		std::vector<std::vector<int>>answerMatrix  = searchSequence(readVec,vecSequence);
-		for (std::vector<int> row : answerMatrix)
-		{
-				printIntVec(row);
-		}
-	}
-	else if(std::strcmp(argv[2],"searchunordered") == 0)
-	{
-		std::vector<std::vector<int>>answerMatrix  = searchUnordered(readVec,vecSequence);
-		for (std::vector<int> row : answerMatrix)
-		{
-				printIntVec(row);
-		}
-	}
-	else if(std::strcmp(argv[2],"searchbestmatch") == 0)
-	{
-		std::vector<int>answerVec  = searchBestMatch(readVec,vecSequence);
-		printIntVec(answerVec);
-	}
-	else{
-		std::cout<<"search function named wrongly"<<std::endl;
-	}
-	
-	
+	std::vector<int> foundRowIndexes = funcMap[searchString](readVec,vecSequence);
+	std::cout << "Below are the list of row indexes that match the search" <<std::endl;
+	printIntVec(foundRowIndexes);
 	return 0;
 }
