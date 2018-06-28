@@ -12,9 +12,9 @@
 class Timer
 {
 	public:
-	std::chrono::duration<double> GetDuration()
+	std::chrono::microseconds GetDuration()
 	{
-		return std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+		return std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	}
 	Timer()
 	{
@@ -175,7 +175,7 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 			ret.push_back(index);
 	}
 	currTimer.EndTimer();
-	std::cout <<"time : " << currTimer.GetDuration().count() << " Seconds" <<std::endl;
+	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
 	return ret;
 }
 
@@ -246,7 +246,7 @@ std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix,
 		}
 	}
 	currTimer.EndTimer();
-	std::cout <<"time : " << currTimer.GetDuration().count() << " Seconds" <<std::endl;
+	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
 	return ret;
 }
 
@@ -317,7 +317,7 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 		}
 	}
 	currTimer.EndTimer();
-	std::cout <<"time : " << currTimer.GetDuration().count() << " Seconds" <<std::endl;
+	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
 	ret.push_back(retIndex);
 	return ret;
 }
