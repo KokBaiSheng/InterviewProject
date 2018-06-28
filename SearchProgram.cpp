@@ -7,6 +7,31 @@
 #include<iomanip>
 #include<algorithm>
 #include<cctype>
+#include<chrono>
+
+class Timer
+{
+	public:
+	std::chrono::duration<double> GetDuration()
+	{
+		return std::chrono::duration_cast<std::chrono::duration<double>>(end - start);
+	}
+	Timer()
+	{
+		StartTimer();	
+	}
+	void StartTimer()
+	{
+		start = std::chrono::high_resolution_clock::now();
+	}
+	void EndTimer()
+	{
+		end = std::chrono::high_resolution_clock::now();
+	}
+	private:
+	std::chrono::high_resolution_clock::time_point start;
+	std::chrono::high_resolution_clock::time_point end;
+};
 
 typedef std::vector<int> (*searchFunction)(std::vector<std::vector<int>> const &, std::vector<int> const &);
 
@@ -78,7 +103,7 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 {
 	std::vector<int> ret = std::vector<int>();
 	std::cout <<"beginning Time" <<std::endl;
-	const clock_t begin_time = std::clock();
+	Timer currTimer = Timer();
 	for (std::vector<int> row : inMatrix)
 	{
 		bool isSequence = false;
@@ -103,7 +128,8 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 			}
 		}
 	}
-	std::cout <<"time : " << float(std::clock() - begin_time ) / CLOCKS_PER_SEC <<std::endl;
+	currTimer.EndTimer();
+	std::cout <<"time : " << currTimer.GetDuration().count() << " Seconds" <<std::endl;
 	return ret;
 }
 
@@ -112,7 +138,7 @@ std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix,
 	std::vector<int> ret = std::vector<int>();
 	std::map<int,int> basisMap = std::map<int,int>();
 	std::cout <<"beginning Time" <<std::endl;
-	const clock_t begin_time = std::clock();
+	Timer currTimer = Timer();
 	for( int it : sequence)
 	{
 		// If the key exists increment it
@@ -149,7 +175,8 @@ std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix,
 			ret.push_back(y);	
 		}
 	}
-	std::cout <<"time : " << float(std::clock() - begin_time ) / CLOCKS_PER_SEC <<std::endl;
+	currTimer.EndTimer();
+	std::cout <<"time : " << currTimer.GetDuration().count() << " Seconds" <<std::endl;
 	return ret;
 }
 
@@ -158,7 +185,7 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 	std::vector<int> ret = std::vector<int>();
 	std::map<int,int> basisMap = std::map<int,int>();
 	std::cout <<"beginning Time" <<std::endl;
-	const clock_t begin_time = std::clock();
+	Timer currTimer = Timer();
 	for( int it : sequence)
 	{
 		// If the key exists increment it
@@ -196,6 +223,8 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 			highestIndex = i;
 		}
 	}
+	currTimer.EndTimer();
+	std::cout <<"time : " << currTimer.GetDuration().count() << " Seconds" <<std::endl;
 	ret.push_back(highestIndex);
 	return ret;
 }
