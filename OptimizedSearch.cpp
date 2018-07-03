@@ -8,6 +8,7 @@
 #include<algorithm>
 #include<cctype>
 #include<chrono>
+#include<unordered_set>
 
 class Timer
 {
@@ -38,7 +39,7 @@ class Node
 {
 	public:
 	std::map<int,Node*> Children;
-	std::vector<int>	rowIndexes;
+	std::unordered_set<int>	rowIndexes;
 	
 	Node() : Children(),rowIndexes(){}
 
@@ -116,13 +117,13 @@ Node* insertValue (Node* baseNode, std::vector<int> const & sequence, const int&
 		if(baseNode->Children.find(it) != baseNode->Children.end())
 		{
 			iterator = baseNode->Children[it];
-			iterator-> rowIndexes.push_back(rowIndex);
+			iterator-> rowIndexes.insert(rowIndex);
 		}
 		else
 		{
 			iterator->Children[it] = new Node();
 			iterator = iterator->Children[it];
-			iterator-> rowIndexes.push_back(rowIndex);	
+			iterator-> rowIndexes.insert(rowIndex);	
 		}
 	}
 	return iterator;
@@ -144,7 +145,11 @@ std::vector<int>  getRowIndex (Node* baseNode, std::vector<int> const & sequence
 			return ret;	
 		}
 	};
-	return iterator->rowIndexes;
+	for(const auto& elem : iterator->rowIndexes)
+	{
+		ret.push_back(elem);	
+	}
+	return ret;
 }
 
 
@@ -363,12 +368,6 @@ int main(int argc, char ** argv)
 	std::vector<std::vector<int>>readVec  = read(fs);
 	readVec = XORCipherTwoDimension(readVec,12345);
 	/*
-	for (std::vector<int> row : readVec)
-	{
-			printIntVec(row);
-	}
-	
-	readVec = XORCipherTwoDimension(readVec,12345);
 	for (std::vector<int> row : readVec)
 	{
 			printIntVec(row);

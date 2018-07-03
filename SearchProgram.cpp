@@ -104,6 +104,7 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 	std::vector<int> ret = std::vector<int>();
 	std::cout <<"beginning Time" <<std::endl;
 	Timer currTimer = Timer();
+	int y = 0;
 	for (std::vector<int> row : inMatrix)
 	{
 		bool isSequence = false;
@@ -122,11 +123,12 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 				}
 				if(isSequence)
 				{
-					ret.push_back(i);	
-					continue;
+					ret.push_back(y);	
+					break;
 				}
 			}
 		}
+		++y;
 	}
 	currTimer.EndTimer();
 	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
