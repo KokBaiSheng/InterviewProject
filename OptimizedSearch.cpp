@@ -109,14 +109,15 @@ std::vector<std::vector<int>> XORCipherTwoDimension (std::vector<std::vector<int
 	return ret;
 }
 
-Node* insertValue (Node* baseNode, std::vector<int> const & sequence, const int& rowIndex)
+int insertValue (Node* baseNode, std::vector<int> const & sequence, const int& rowIndex)
 {
 	Node* iterator = baseNode;
+	int ret = 0;
 	for(int it : sequence)
 	{
-		if(baseNode->Children.find(it) != baseNode->Children.end())
+		if(iterator->Children.find(it) != iterator->Children.end())
 		{
-			iterator = baseNode->Children[it];
+			iterator = iterator->Children[it];
 			iterator-> rowIndexes.insert(rowIndex);
 		}
 		else
@@ -125,8 +126,9 @@ Node* insertValue (Node* baseNode, std::vector<int> const & sequence, const int&
 			iterator = iterator->Children[it];
 			iterator-> rowIndexes.insert(rowIndex);	
 		}
+		++ret;
 	}
-	return iterator;
+	return ret;
 }
 
 std::vector<int>  getRowIndex (Node* baseNode, std::vector<int> const & sequence)
@@ -145,6 +147,10 @@ std::vector<int>  getRowIndex (Node* baseNode, std::vector<int> const & sequence
 			return ret;	
 		}
 	};
+	if(iterator->rowIndexes.size() > 2)
+	{
+		std::cout <<"here" <<std::endl;	
+	}
 	for(const auto& elem : iterator->rowIndexes)
 	{
 		ret.push_back(elem);	
@@ -158,6 +164,7 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 	// Setting up nodes
 	std::vector<int> ret = std::vector<int>();
 	Node* baseNode =  new Node();
+	long nodenum = 0;
 	for (int y = 0; y< inMatrix.size(); ++y)
 	{
 		for (int j = 0; j <inMatrix[y].size(); ++j)
@@ -167,9 +174,10 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 			{
 				row.push_back(inMatrix[y][i]);
 			}
-			insertValue(baseNode, row, y);
+			nodenum +=insertValue(baseNode, row, y);
 		}
 	}
+	std::cout << "nodes : "<<nodenum<<std::endl;
 	std::cout <<"beginning Time" <<std::endl;
 	Timer currTimer = Timer();
 	//read nodes
