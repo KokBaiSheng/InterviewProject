@@ -34,7 +34,7 @@ class Timer
 	std::chrono::high_resolution_clock::time_point end;
 };
 
-typedef std::vector<int> (*searchFunction)(std::vector<std::vector<int>> const &, std::vector<int> const &);
+typedef std::vector<int> (*searchFunction)(std::vector<std::vector<int>> const &, std::vector<int> const &, double &, bool const & );
 class Node
 {
 	public:
@@ -131,6 +131,17 @@ int insertValue (Node* baseNode, std::vector<int> const & sequence, const int& r
 	return ret;
 }
 
+void deleteNodes(Node* baseNode)
+{
+	for (std::pair<const int,Node*>& elem : baseNode->Children)
+	{
+		deleteNodes(elem.second);
+	}
+	delete(baseNode);
+}
+
+
+
 std::vector<int>  getRowIndex (Node* baseNode, std::vector<int> const & sequence)
 {
 	Node* iterator = baseNode;
@@ -147,19 +158,29 @@ std::vector<int>  getRowIndex (Node* baseNode, std::vector<int> const & sequence
 			return ret;	
 		}
 	};
-	if(iterator->rowIndexes.size() > 2)
-	{
-		std::cout <<"here" <<std::endl;	
-	}
 	for(const auto& elem : iterator->rowIndexes)
 	{
 		ret.push_back(elem);	
 	}
 	return ret;
 }
+std::vector<int> searchSequenceSearch(Node*& baseNode, std::vector<int> const & sequence, double & accumulatedTime)
+{
+	std::vector<int> ret = std::vector<int>();
+	Timer currTimer = Timer();
+	//read nodes
+	std::vector<int> rows = getRowIndex(baseNode,sequence);
+	// return rows that are correct
+	for(int index : rows)
+	{
+			ret.push_back(index);
+	}
+	currTimer.EndTimer();
+	accumulatedTime += currTimer.GetDuration().count();
+	return ret;
+}
 
-
-std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
+std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence, double & accumulatedTime, bool const & isBenchmarking)
 {
 	// Setting up nodes
 	std::vector<int> ret = std::vector<int>();
@@ -177,60 +198,34 @@ std::vector<int> searchSequence(std::vector<std::vector<int>> const & inMatrix, 
 			nodenum +=insertValue(baseNode, row, y);
 		}
 	}
-	std::cout << "nodes : "<<nodenum<<std::endl;
-	std::cout <<"beginning Time" <<std::endl;
-	Timer currTimer = Timer();
-	//read nodes
-	std::vector<int> rows = getRowIndex(baseNode,sequence);
-	// return rows that are correct
-	for(int index : rows)
+	if(isBenchmarking)
 	{
-			ret.push_back(index);
+		for(int i = 0; i < 1000; ++i)
+		{
+			ret =  searchSequenceSearch(baseNode, sequence, accumulatedTime);
+		}
+		accumulatedTime/=1000;
 	}
-	currTimer.EndTimer();
-	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
+	else
+	{
+		ret =  searchSequenceSearch(baseNode, sequence, accumulatedTime);
+	}
+	deleteNodes(baseNode);
 	return ret;
 }
 
-std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
+std::vector<int> searchUnorderedSearch(std::map<int,std::map<size_t, int >> processedMap, std::vector<int> const & sequence, double & accumulatedTime)
 {
 	std::vector<int> ret = std::vector<int>();
-	// Handle information processing
-	std::map<int,std::map<size_t, int >> processedMap = std::map<int,std::map<size_t, int >> ();
-	for (int y = 0; y < inMatrix.size();++y)
-	{
-		for(int i = 0; i < inMatrix[y].size(); ++i)
-		{
-			//if the value of thesequence is inside
-			if(processedMap.find(inMatrix[y][i]) != processedMap.end())
-			{
-				//if the row index is already saved;
-				if(processedMap[inMatrix[y][i]].find(y) != processedMap[inMatrix[y][i]].end())
-				{
-					++processedMap[inMatrix[y][i]][y];
-				}
-				else
-				{
-					processedMap[inMatrix[y][i]][y] = 1;	
-				}
-			}
-			else
-			{
-				processedMap[inMatrix[y][i]] = std::map<size_t,int>();
-				processedMap[inMatrix[y][i]][y] = 1;
-			}
-		}
-	}
-	//handle 
-	std::cout <<"beginning Time" <<std::endl;
 	Timer currTimer = Timer();
 	std::map<size_t,int> rowScore = std::map<size_t,int>();
 	for(int it : sequence)
 	{
+		std::map<int,std::map<size_t, int >>::iterator mapIt = processedMap.find(it);
 		//if it exists
-		if(processedMap.find(it) != processedMap.end())
+		if(mapIt != processedMap.end())
 		{
-			for ( auto temp : processedMap[it])
+			for ( auto temp : (*mapIt).second)
 			{
 				if(temp.second > 0)
 				{
@@ -259,11 +254,10 @@ std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix,
 		}
 	}
 	currTimer.EndTimer();
-	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
-	return ret;
+	accumulatedTime +=  currTimer.GetDuration().count();
 }
 
-std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence)
+std::vector<int> searchUnordered(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence, double & accumulatedTime, bool const &  isBenchmarking)
 {
 	std::vector<int> ret = std::vector<int>();
 	// Handle information processing
@@ -293,15 +287,35 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 		}
 	}
 	//handle 
-	std::cout <<"beginning Time" <<std::endl;
+
+	if(isBenchmarking)
+	{
+		for(int i = 0; i< 1000; ++i)
+		{
+			ret = searchUnorderedSearch(processedMap, sequence, accumulatedTime);
+		}
+		accumulatedTime /=1000;
+	}
+	else
+	{
+		ret = searchUnorderedSearch(processedMap, sequence, accumulatedTime);
+	}
+	
+	return ret;
+}
+
+std::vector<int> searchBestMatchSearch(std::map<int,std::map<size_t, int >> processedMap, std::vector<int> const & sequence, double & accumulatedTime)
+{
+	std::vector<int> ret = std::vector<int>();
 	Timer currTimer = Timer();
 	std::map<size_t,int> rowScore = std::map<size_t,int>();
 	for(int it : sequence)
 	{
+		std::map<int,std::map<size_t, int >>::iterator mapIt = processedMap.find(it);
 		//if it exists
-		if(processedMap.find(it) != processedMap.end())
+		if(mapIt != processedMap.end())
 		{
-			for ( auto temp : processedMap[it])
+			for ( auto temp : (*mapIt).second)
 			{
 				if(temp.second > 0)
 				{
@@ -317,6 +331,9 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 				}
 			}
 		}
+		//if it doesn't exist automatically fail
+		else 
+			return ret;
 	}
 	//prepare to return
 	std::vector<int> rowIndexes = std::vector<int> ();
@@ -327,11 +344,57 @@ std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix,
 		if(it.second > highestScore)
 		{
 			retIndex = it.first;	
+			highestScore = it.second;
 		}
 	}
 	currTimer.EndTimer();
-	std::cout <<"time : " << currTimer.GetDuration().count() << " MicroSeconds" <<std::endl;
+	accumulatedTime +=  currTimer.GetDuration().count();
 	ret.push_back(retIndex);
+	return ret;
+}
+
+std::vector<int> searchBestMatch(std::vector<std::vector<int>> const & inMatrix, std::vector<int> const & sequence, double & accumulatedTime, bool const &  isBenchmarking)
+{
+	std::vector<int> ret = std::vector<int>();
+	// Handle information processing
+	std::map<int,std::map<size_t, int >> processedMap = std::map<int,std::map<size_t, int >> ();
+	for (int y = 0; y < inMatrix.size();++y)
+	{
+		for(int i = 0; i < inMatrix[y].size(); ++i)
+		{
+			//if the value of thesequence is inside
+			if(processedMap.find(inMatrix[y][i]) != processedMap.end())
+			{
+				//if the row index is already saved;
+				if(processedMap[inMatrix[y][i]].find(y) != processedMap[inMatrix[y][i]].end())
+				{
+					++processedMap[inMatrix[y][i]][y];
+				}
+				else
+				{
+					processedMap[inMatrix[y][i]][y] = 1;	
+				}
+			}
+			else
+			{
+				processedMap[inMatrix[y][i]] = std::map<size_t,int>();
+				processedMap[inMatrix[y][i]][y] = 1;
+			}
+		}
+	}
+	//handle 
+	if(isBenchmarking)
+	{
+		for(int i = 0; i< 1000; ++i)
+		{
+			ret = searchBestMatchSearch(processedMap, sequence, accumulatedTime);
+		}
+		accumulatedTime /=1000;
+	}
+	else
+	{
+		ret = searchBestMatchSearch(processedMap, sequence, accumulatedTime);
+	}
 	return ret;
 }
 
@@ -358,13 +421,43 @@ int main(int argc, char ** argv)
 		std::cout <<"Please specify valid .dat file" << std::endl;
 		return -1;	
 	}
+	bool benchmarking = false;
+	int startSearchString = 2;
+	//If there is an extra command
+	std::string commandString = std::string(argv[2]);
+	std::transform(commandString.begin(),commandString.end(),commandString.begin(),
+				  [](unsigned char c) -> unsigned char { return std::tolower(c); });
+	//If the benchmark command is called 
+	if(commandString.compare("benchmark") == 0)
+	{
+		//searchstring starts one more elem down
+		++startSearchString;
+		benchmarking = true;
+	}
 	//Initialize search function map
 	std::map<std::string,searchFunction> funcMap = std::map<std::string,searchFunction>();
 	funcMap["searchsequence"] = searchSequence;
 	funcMap["searchunordered"] = searchUnordered;
 	funcMap["searchbestmatch"] = searchBestMatch;
 	//get searchfunction
-	std::string searchString = std::string(argv[2]);
+	std::string searchString = std::string(argv[startSearchString]);
+	std::vector<int> vecSequence = std::vector<int>();
+	//Takes in a .txt file
+	if(searchString.find(".txt")!= -1)
+	{
+		std::ifstream searchfs;
+		searchfs.open (searchString);
+		std::string line;
+		if( searchfs.is_open())
+		{
+			getline(searchfs,searchString, ' ');
+			while ( getline (searchfs,line, ' ') )
+			{
+		  		vecSequence.push_back(std::stoi(line));
+			}
+			searchfs.close();
+		}
+	}
 	std::transform(searchString.begin(),searchString.end(),searchString.begin(),
 				  [](unsigned char c) -> unsigned char { return std::tolower(c); });
 	if(funcMap.find(searchString) == funcMap.end())
@@ -381,14 +474,20 @@ int main(int argc, char ** argv)
 			printIntVec(row);
 	}
 	*/
+	
+	if(vecSequence.size() <=0)
+	{
+		for(int i = ++startSearchString ; i < argc ; ++i)
+		{
+			vecSequence.push_back(atoi(argv[i]));
+		}
+	}
+	double time = 0;
+	std::vector<int> foundRowIndexes;
+	foundRowIndexes = funcMap[searchString](readVec,vecSequence,time,benchmarking);
 	std::cout << std::fixed << std::showpoint;
 	std::cout << std::setprecision(10);
-	std::vector<int> vecSequence = std::vector<int>();
-	for(int i = 3 ; i < argc ; ++i)
-	{
-		vecSequence.push_back(atoi(argv[i]));
-	}
-	std::vector<int> foundRowIndexes = funcMap[searchString](readVec,vecSequence);
+	std::cout << "Time taken : " << time<< " Microseconds "<<std::endl;
 	std::cout << "Below are the list of row indexes that match the search" <<std::endl;
 	printIntVec(foundRowIndexes);
 	return 0;

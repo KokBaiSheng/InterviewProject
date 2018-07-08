@@ -1,0 +1,20 @@
+#!/bin/bash
+echo TestCase.dat is created from simple.csv
+echo Search Sequence
+./Search TestCase.dat searchSequence 1 2 3
+./optimizedSearch TestCase.dat searchSequence 1 2 3
+echo Search Unordered
+./Search TestCase.dat searchUnordered 1 2 3
+./optimizedSearch TestCase.dat searchUnordered 1 2 3
+echo Search BestMatch
+./Search TestCase.dat searchBestmatch 1 2 3
+./optimizedSearch TestCase.dat searchBestmatch 1 2 3
+echo Search Sequence
+./Search TestCase.dat searchSequence 17 7 8
+./optimizedSearch TestCase.dat searchSequence 17 7 8
+echo Search Unordered
+./Search TestCase.dat searchUnordered 17 7 8
+./optimizedSearch TestCase.dat searchUnordered 17 7 8
+echo Search BestMatch
+./Search TestCase.dat searchBestmatch 17 7 8
+./optimizedSearch TestCase.dat searchBestmatch 17 7 8
